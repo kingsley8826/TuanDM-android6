@@ -31,7 +31,8 @@ public class Plane {
     private void addBullet(){
         Bullet bullet = null;
         try {
-            bullet = new Bullet((x + PLANE_WIDTH / 2), y, 10, ImageIO.read(new File("resources/bullet.png")));
+            bullet = new Bullet((x + PLANE_WIDTH / 2), y, ImageIO.read(new File("resources/bullet.png")));
+
         } catch (IOException e) {
             e.printStackTrace();
         }
