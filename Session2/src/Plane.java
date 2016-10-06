@@ -62,7 +62,7 @@ public class Plane {
         x = e.getX() - PLANE_WIDTH / 2;
         y = e.getY() - PLANE_HEIGHT / 2;
     }
-    public void mouseClick(){
+    public void mousePressed(){
         addBullet();
     }
     public void drawImage(Graphics g){

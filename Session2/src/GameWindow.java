@@ -93,14 +93,14 @@ public class GameWindow extends Frame implements Runnable {
             }
         });
         this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                plane2.mouseClick();
+              @Override
+              public void mousePressed(MouseEvent e) {
+                  super.mousePressed(e);
+                  plane2.mousePressed();
+                  repaint();
+              }
+          });
                 repaint();
-            }
-        });
-        repaint();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class GameWindow extends Frame implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(17);
+
                 if(!plane2.getBullets().isEmpty()) {
                     for (int i = 0; i < plane2.getBullets().size(); i++){
                         plane2.getBullets().get(i).fly();
@@ -144,6 +144,7 @@ public class GameWindow extends Frame implements Runnable {
                     }
                 }
                 repaint();
+                Thread.sleep(17);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
