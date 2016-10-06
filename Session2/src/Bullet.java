@@ -12,10 +12,12 @@ public class Bullet {
     public static final int BULLET_HEIGHT = 30;
     public static final int SPEED = 10;
 
-    public Bullet(int x, int y, Image image) {
+    public Bullet(Image image) {
+        this.image = image;
+    }
+    public void setLocation(int x, int y){
         this.x = x;
         this.y = y;
-        this.image = image;
     }
     public void drawImage(Graphics g){
         g.drawImage(image, x, y,BULLET_WIDTH, BULLET_HEIGHT, null);
