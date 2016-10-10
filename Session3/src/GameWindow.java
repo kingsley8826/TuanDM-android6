@@ -1,47 +1,63 @@
+import controllers.EnemyBulletController;
+import controllers.EnemyPlaneController;
+import controllers.PlaneController;
+import models.EnemyBullet;
+import models.EnemyPlane;
+import models.Plane;
+import utils.Utils;
+import views.EnemyBulletView;
+import views.EnemyPlaneView;
+import views.PlaneView;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Vector;
 
 /**
- * Created by tu4nFPT on 02/10/2016.
+ * Created by apple on 10/2/16.
  */
 public class GameWindow extends Frame implements Runnable {
-    public static final int BACKGROUND_WIDTH = 800;
-    public static final int BACKGROUND_HEIGHT = 600;
-    public static ArrayList<Bullet> MY_BULLETS;
-    public static ArrayList<Bullet> ENEMY_BULLETS;
-    public static ArrayList<Plane> ENEMY_PLANES;
-    private int score = 0;
-    private boolean isRun = true;
 
-    Image background = null;
+    private static final int BACKGROUND_WIDTH = 600;
+    private static final int BACKGROUND_HEIGHT = 400;
+
+    Image backgroundImage = null;
     Image backBufferImage;
 
-    CreatEnemyPlanes creatEnemyPlanes;
-    Plane myPlane;
-
-    SoundPlayer shot = new SoundPlayer(new File("sound/shot.wav"));
-    SoundPlayer dead = new SoundPlayer(new File("sound/dead.wav"));
+    PlaneController planeController;
+    PlaneController planeController2;
+    Vector<EnemyPlaneController> enemyPlaneControllerVector;
 
     public GameWindow() {
-        backBufferImage = new BufferedImage(BACKGROUND_WIDTH, BACKGROUND_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        MY_BULLETS = new ArrayList<>();
-        ENEMY_BULLETS = new ArrayList<>();
-        ENEMY_PLANES = new ArrayList<>();
-        creatEnemyPlanes = new CreatEnemyPlanes();
-        creatEnemyPlanes.start();
-        try {
-            myPlane = new Plane(450, 550,
-                    ImageIO.read(new File("resources/plane4.png")));
-        } catch (IOException e) {
-            e.printStackTrace();
+        planeController = new PlaneController(
+                new Plane(BACKGROUND_WIDTH/2,  BACKGROUND_HEIGHT - Plane.PLANE_HEIGHT - 10),
+                new PlaneView(Utils.loadImageFromRes("plane3.png")));
+        planeController2 = new PlaneController(
+                new Plane(BACKGROUND_WIDTH/2,  BACKGROUND_HEIGHT - Plane.PLANE_HEIGHT*2 - 10 ),
+                new PlaneView(Utils.loadImageFromRes("plane4.png")));
+        backBufferImage = new BufferedImage(BACKGROUND_WIDTH,
+                BACKGROUND_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+
+        enemyPlaneControllerVector = new Vector<>();
+
+        for(int i = 0; i < 10; i++) {
+            int y = 60;
+            int x = i * (EnemyPlane.ENEMY_PLANE_WIDTH + 5);
+            EnemyPlaneController enemyPlaneController = new EnemyPlaneController(
+                    new EnemyPlane(x, y),
+                    new EnemyPlaneView(Utils.loadImageFromRes("plane1.png"))
+            );
+            enemyPlaneControllerVector.add(enemyPlaneController);
         }
         this.setVisible(true);
         this.setSize(BACKGROUND_WIDTH, BACKGROUND_HEIGHT);
+        this.setLocationRelativeTo(null);
+
+
         this.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -50,6 +66,7 @@ public class GameWindow extends Frame implements Runnable {
 
             @Override
             public void windowClosing(WindowEvent e) {
+                System.out.println("windowClosing");
                 System.exit(0);
             }
 
@@ -70,136 +87,115 @@ public class GameWindow extends Frame implements Runnable {
 
             @Override
             public void windowActivated(WindowEvent e) {
-                System.out.println("windowActivated");
+
             }
 
             @Override
             public void windowDeactivated(WindowEvent e) {
-                System.out.println("windowDeactivated");
+
             }
         });
-        this.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                super.keyReleased(e);
-                if(e.getKeyCode() == KeyEvent.VK_F5){
-                    restartGame();
-                }
-            }
-        });
-        try {
-            background = ImageIO.read(new File("resources/background.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         this.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                if(isRun) {
-                    myPlane.mouseMoved(e);
-                    repaint();
-                }
+
             }
 
             @Override
             public void mouseMoved(MouseEvent e) {
-                if(isRun) {
-                    myPlane.mouseMoved(e);
-                    repaint();
-                }
+                planeController2.mouseMoved(e);
             }
         });
         this.addMouseListener(new MouseAdapter() {
-              @Override
-              public void mousePressed(MouseEvent e) {
-                  super.mousePressed(e);
-                  if(isRun) {
-                      shot.play();
-                      myPlane.mousePressed();
-                      repaint();
-                  }
-              }
-          });
-        repaint();
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                planeController2.mousePressed(e);
+            }
+        });
+
+        this.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                System.out.println("keyTyped");
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                System.out.println("keyPressed");
+                planeController.keyPressed(e);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                System.out.println("keyReleased");
+                planeController.keyReleased(e);
+            }
+
+        });
+
+        try {
+            backgroundImage = ImageIO.read (
+                    new File("resources/background.png"));
+            System.out.println("Loaded backgroundImage");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
+        System.out.println("draw background image");
     }
 
     @Override
     public void update(Graphics g) {
         Graphics backBufferGraphics = backBufferImage.getGraphics();
+        backBufferGraphics.drawImage(backgroundImage,
+                0, 0,
+                BACKGROUND_WIDTH, BACKGROUND_HEIGHT, null);
+        planeController.draw(backBufferGraphics);
+        planeController2.draw(backBufferGraphics);
 
-        backBufferGraphics.drawImage(background, 0, 0, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, null);
-
-        for (int i = 0; i < ENEMY_BULLETS.size(); i++) {
-            ENEMY_BULLETS.get(i).drawImage(backBufferGraphics);
+        for(EnemyPlaneController enemyPlaneController : enemyPlaneControllerVector) {
+            enemyPlaneController.draw(backBufferGraphics);
         }
-        for (int i = 0; i < MY_BULLETS.size(); i++) {
-            MY_BULLETS.get(i).drawImage(backBufferGraphics);
-        }
-        for (int i = 0; i < ENEMY_PLANES.size(); i++) {
-            if (!ENEMY_PLANES.get(i).isDead(false)) {
-                ENEMY_PLANES.get(i).drawImage(backBufferGraphics);
-            }else{
-                dead.play();
-                score ++;
-                ENEMY_PLANES.remove(i);
-            }
-        }
-        backBufferGraphics.setColor(Color.RED);
-        backBufferGraphics.setFont(new Font("TimesRoman", Font.BOLD, 30));
-        if (myPlane.isDead(true)){
-            dead.play();
-            creatEnemyPlanes.stopThread();
-            stopThread();
-            backBufferGraphics.drawImage(background, 0, 0, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, null);
-            backBufferGraphics.drawString("You lose !", 340, 320);
-            backBufferGraphics.drawString("Press F5 to play again !", 260, 350);
-        }else {
-            myPlane.drawImage(backBufferGraphics);
-        }
-        backBufferGraphics.drawString(String.valueOf(score), 20, 60);
-        g.drawImage(backBufferImage, 0, 0, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, null);
+        g.drawImage(backBufferImage,
+                0, 0,
+                BACKGROUND_WIDTH, BACKGROUND_HEIGHT, null);
     }
+
+    int count = 0;
 
     @Override
     public void run() {
-        while (true) {
-            if(isRun) {
-                for (int i = 0; i < ENEMY_PLANES.size(); i++) {
-                    ENEMY_PLANES.get(i).fly();
-                }
-                for (int i = 0; i < ENEMY_BULLETS.size(); i++) {
-                    ENEMY_BULLETS.get(i).fly(false);
-                }
-                for (int i = 0; i < MY_BULLETS.size(); i++) {
-                    MY_BULLETS.get(i).fly(true);
-                }
-                repaint();
-            }
+        while(true) {
             try {
+                planeController.run();
+                planeController2.run();
+                count++;
+                for (EnemyPlaneController enemyPlaneController : enemyPlaneControllerVector) {
+                    enemyPlaneController.run();
+                }
+                if(count >= 20) {
+                    count = 0;
+                    for (EnemyPlaneController enemyPlaneController : enemyPlaneControllerVector) {
+                        int x = enemyPlaneController.getEnemyPlane().getMiddleX() - EnemyBullet.BULLET_WIDTH / 2;
+                        int y = enemyPlaneController.getEnemyPlane().getY() + EnemyBullet.BULLET_HEIGHT;
+                        EnemyBulletController enemyBulletController = new EnemyBulletController(
+                                new EnemyBullet(x, y),
+                                new EnemyBulletView(Utils.loadImageFromRes("enemy_bullet.png"))
+                        );
+                        enemyPlaneController.getEnemyBulletControllerVector().add(enemyBulletController);
+                    }
+                }
                 Thread.sleep(17);
+                repaint();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
-    private void stopThread(){
-        isRun = false;
-    }
-    private void startThread(){
-        isRun = true;
-    }
-    private void restartGame(){
-        score = 0;
-        MY_BULLETS = new ArrayList<>();
-        ENEMY_BULLETS = new ArrayList<>();
-        ENEMY_PLANES = new ArrayList<>();
-        startThread();
-        creatEnemyPlanes.startThread();
-    }
-
 }
